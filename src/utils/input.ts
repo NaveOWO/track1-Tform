@@ -5,7 +5,7 @@ type ErrorType = {
   message: string[];
 };
 
-type InputParamsType = Omit<ParamsValueType, "type" | "onChnageModeㄹ">;
+type InputParamsType = Omit<ParamsValueType, "type" | "onChnageMode">;
 
 export class Input {
   private value?: string = "";
