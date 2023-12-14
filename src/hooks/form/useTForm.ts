@@ -1,14 +1,7 @@
 import { RefCallback, useRef, useState } from "react";
-import { Input, Store } from "../../utils/store";
-
-export type ParamsValueType = {
-  defaultValue?: string;
-  placeholder?: string;
-  type?: "file" | "text" | "checkbox";
-  onChangeMode?: boolean;
-};
-
-export type TFormParamsType = Record<string, ParamsValueType>;
+import { TFormParamsType } from "../../types/common";
+import { Input } from "../../utils/input";
+import { Store } from "../../utils/store";
 
 type ValidateOptionsType = {
   rules?: RegExp[];
@@ -51,16 +44,27 @@ const useTForm = (params: TFormParamsType) => {
     return true;
   };
 
+  const shoudUpdateState = (
+    errorstate: boolean,
+    inputName: string,
+    mode: "blur" | "change"
+  ) => {
+    const modeToUpdate =
+      mode === "blur" ? params.onBlurMode : params.onChangeMode;
+    return (
+      modeToUpdate && store.store[inputName].getError().state === errorstate
+    );
+  };
+
   const onChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     name: string,
-    { rules, required, maxLength }: ValidateOptionsType
+    options: ValidateOptionsType
   ) => {
     Input.setValue(store.store[name], e.target.value);
 
-    if (validate({ rules, required, maxLength }, e.target.value)) {
-      params.onChangeMode &&
-        store.store[name].getError().state === true &&
+    if (validate(options, e.target.value)) {
+      shoudUpdateState(true, name, "change") &&
         setErrors((prev) => ({
           ...prev,
           [name]: { ...prev[name], state: false },
@@ -68,8 +72,7 @@ const useTForm = (params: TFormParamsType) => {
 
       store.store[name].setInputError(false);
     } else {
-      params.onChangeMode &&
-        store.store[name].getError().state === false &&
+      shoudUpdateState(false, name, "change") &&
         setErrors((prev) => ({
           ...prev,
           [name]: { ...prev[name], state: true },
@@ -83,7 +86,31 @@ const useTForm = (params: TFormParamsType) => {
     return store.store[name].getValue();
   };
 
-  const onBlur = () => {};
+  const onBlur = (
+    e: React.FocusEvent<HTMLInputElement>,
+    name: string,
+    options: ValidateOptionsType
+  ) => {
+    Input.setValue(store.store[name], e.target.value);
+
+    if (validate(options, e.target.value)) {
+      shoudUpdateState(true, name, "blur") &&
+        setErrors((prev) => ({
+          ...prev,
+          [name]: { ...prev[name], state: false },
+        }));
+
+      store.store[name].setInputError(false);
+    } else {
+      shoudUpdateState(false, name, "blur") &&
+        setErrors((prev) => ({
+          ...prev,
+          [name]: { ...prev[name], state: true },
+        }));
+
+      store.store[name].setInputError(true);
+    }
+  };
 
   const register = (name: string, options?: RegisterOptionType) => {
     const combinedOnChnage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,7 +123,11 @@ const useTForm = (params: TFormParamsType) => {
     };
 
     const combinedOnBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-      onBlur();
+      onBlur(e, name, {
+        rules: options?.rules,
+        required: options?.required,
+        maxLength: options?.maxLength,
+      });
       options?.onBlur?.(e);
     };
 
