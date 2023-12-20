@@ -1,8 +1,8 @@
 import { RefCallback, useRef, useState } from "react";
 import { TFormParamsType } from "../../types/common";
-import { extractObjectWithEntries } from "../../utils/extractedObject";
-import { ErrorType, Input } from "../../utils/input";
-import { Store } from "../../utils/store";
+import { extractObjectWithEntries } from "../../utils/common/extractedObject";
+import { ErrorType, Input } from "../../utils/input/input";
+import { Store } from "../../utils/store/store";
 
 export type ParamsValueType = {
   defaultValue?: string | string[];
