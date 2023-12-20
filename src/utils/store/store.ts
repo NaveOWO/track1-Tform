@@ -1,5 +1,5 @@
 import { TFormParamsType } from "../../types/common";
-import { Input } from "../input";
+import { Input } from "../input/input";
 import { getInvariantObjectValues, invariantOf } from "../invariantType";
 
 export type StoreType<Form extends TFormParamsType = TFormParamsType> = Record<
