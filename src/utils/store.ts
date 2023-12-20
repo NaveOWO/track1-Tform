@@ -1,18 +1,20 @@
 import { TFormParamsType } from "../types/common";
 import { Input } from "./input";
+import { getInvariantObjectValues, invariantOf } from "./invariantType";
 
-type StoreType = {
-  [Name in keyof TFormParamsType]: Input;
-};
+export type StoreType<Form extends TFormParamsType = TFormParamsType> = Record<
+  keyof Form,
+  Input
+>;
 
-export class Store {
-  store: StoreType = {} as StoreType;
+export class Store<Form extends TFormParamsType> {
+  store: StoreType<Form> = {} as StoreType<Form>;
 
   private isValid: boolean = false;
   private isDirty: boolean = false;
   private isTouched: boolean = false;
 
-  constructor(inputs: TFormParamsType) {
+  constructor(inputs: Form) {
     for (const input in inputs) {
       this.store[input] = new Input(inputs[input]);
     }
@@ -26,8 +28,11 @@ export class Store {
     this.isDirty = state;
   }
 
-  private setTouchedState(state: boolean) {
-    this.isTouched = state;
+  setTouchedState() {
+    const touchedState = getInvariantObjectValues(invariantOf(this.store)).some(
+      (input) => input.defaultValue !== input.value
+    );
+    this.isTouched = touchedState;
   }
 
   validateAllInputValid() {
@@ -38,17 +43,10 @@ export class Store {
   }
 
   validateAllInputDirty() {
-    const dirtyState = Object.keys(this.store).every(
+    const dirtyState = Object.keys(this.store).some(
       (input) => this.store[input].isDirty === true
     );
     this.setDirtyState(dirtyState);
-  }
-
-  validateAllInputTouched() {
-    const touchedState = Object.keys(this.store).every(
-      (input) => this.store[input].isTouched === true
-    );
-    this.setTouchedState(touchedState);
   }
 
   getValidState() {
