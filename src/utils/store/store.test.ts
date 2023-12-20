@@ -1,5 +1,5 @@
-import { ParamsValueType } from "../src/types/common";
-import { Store } from "../src/utils/store";
+import { ParamsValueType } from "../../types/common";
+import { Store } from "./store";
 
 type TStore = Record<"test1" | "test2", ParamsValueType>;
 

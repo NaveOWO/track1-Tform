@@ -1,6 +1,6 @@
-import { TFormParamsType } from "../types/common";
-import { Input } from "./input";
-import { getInvariantObjectValues, invariantOf } from "./invariantType";
+import { TFormParamsType } from "../../types/common";
+import { Input } from "../input";
+import { getInvariantObjectValues, invariantOf } from "../invariantType";
 
 export type StoreType<Form extends TFormParamsType = TFormParamsType> = Record<
   keyof Form,
@@ -32,6 +32,7 @@ export class Store<Form extends TFormParamsType> {
     const touchedState = getInvariantObjectValues(invariantOf(this.store)).some(
       (input) => input.defaultValue !== input.value
     );
+
     this.isTouched = touchedState;
   }
 
