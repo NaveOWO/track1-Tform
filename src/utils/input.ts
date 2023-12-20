@@ -1,6 +1,6 @@
 import { ParamsValueType } from "../types/common";
 
-type ErrorType = {
+export type ErrorType = {
   state: boolean;
   message: string[];
 };
@@ -8,15 +8,16 @@ type ErrorType = {
 type InputParamsType = Omit<ParamsValueType, "type" | "onChnageMode">;
 
 export class Input {
-  private value?: string = "";
-  private placeholder?: string = "";
-  private error: ErrorType = { state: false, message: [""] };
+  defaultValue?: string = "";
+  value?: string = "";
+  placeholder?: string = "";
+  error: ErrorType = { state: false, message: [""] };
 
   isValid: boolean = false;
   isDirty: boolean = false;
-  isTouched: boolean = false;
 
   constructor(props: InputParamsType) {
+    this.defaultValue = props.defaultValue;
     this.value = props.defaultValue;
     this.placeholder = props.placeholder;
   }
