@@ -17,7 +17,7 @@ export function getInvariantObjectKeys<T>(arg: InvariantOf<T>): (keyof T)[] {
 }
 
 export function getInvariantObjectValues<T>(arg: InvariantOf<T>): T[keyof T][] {
-  return Object.keys(arg) as unknown as T[keyof T][];
+  return Object.values(arg) as unknown as T[keyof T][];
 }
 
 export function getInvariantObjectEntries<T>(
