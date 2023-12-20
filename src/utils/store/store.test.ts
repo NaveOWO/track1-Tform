@@ -3,7 +3,7 @@ import { Store } from "./store";
 
 type TStore = Record<"test1" | "test2", ParamsValueType>;
 
-describe("Store", () => {
+describe("Store 테스트", () => {
   let store: Store<TStore>;
 
   beforeEach(() => {
