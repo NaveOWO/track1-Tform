@@ -1,7 +1,16 @@
 import { RefCallback, useRef, useState } from "react";
 import { TFormParamsType } from "../../types/common";
-import { Input } from "../../utils/input";
+import { extractObjectWithEntries } from "../../utils/extractedObject";
+import { ErrorType, Input } from "../../utils/input";
 import { Store } from "../../utils/store";
+
+export type ParamsValueType = {
+  defaultValue?: string | string[];
+  placeholder?: string;
+  type?: "file" | "text" | "checkbox";
+  onChangeMode?: boolean;
+  onBlurMode?: boolean;
+};
 
 type ValidateOptionsType = {
   rules?: RegExp[];
@@ -17,15 +26,23 @@ type RegisterOptionType = {
   maxLength?: ValidateOptionsType["maxLength"];
 };
 
-const useTForm = (params: TFormParamsType) => {
-  const store = useRef(new Store(params)).current;
-  const [errors, setErrors] = useState(
+type StoreType<Form extends TFormParamsType = TFormParamsType> = Record<
+  keyof Form,
+  Input
+>;
+
+const useTForm = <Form extends TFormParamsType>(params: Form) => {
+  type FieldKey = keyof Form;
+
+  const store = useRef(new Store<Form>(params)).current;
+  const realStore = store.store as StoreType<Form>;
+
+  const [errors, setErrors] = useState<Record<FieldKey, ErrorType>>(
     Object.fromEntries(
-      Object.entries(store.store).map((store) => [
-        store[0],
-        store[1].getError(),
-      ])
-    )
+      (Object.entries(store.store) as unknown as [FieldKey, Input][]).map(
+        (store) => [store[0], store[1].getError()]
+      )
+    ) as unknown as Record<FieldKey, ErrorType>
   );
 
   const validate = (options: ValidateOptionsType, target: string) => {
@@ -46,22 +63,23 @@ const useTForm = (params: TFormParamsType) => {
 
   const shoudUpdateState = (
     errorstate: boolean,
-    inputName: string,
+    inputName: FieldKey,
     mode: "blur" | "change"
   ) => {
     const modeToUpdate =
       mode === "blur" ? params.onBlurMode : params.onChangeMode;
-    return (
-      modeToUpdate && store.store[inputName].getError().state === errorstate
-    );
+    return modeToUpdate && realStore[inputName].getError().state === errorstate;
   };
 
   const onChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    name: string,
+    name: FieldKey,
     options: ValidateOptionsType
   ) => {
-    Input.setValue(store.store[name], e.target.value);
+    Input.setValue(realStore[name], e.target.value);
+    store.validateAllInputDirty();
+    store.validateAllInputValid();
+    store.setTouchedState();
 
     if (validate(options, e.target.value)) {
       shoudUpdateState(true, name, "change") &&
@@ -70,7 +88,7 @@ const useTForm = (params: TFormParamsType) => {
           [name]: { ...prev[name], state: false },
         }));
 
-      store.store[name].setInputError(false);
+      realStore[name].setInputError(false);
     } else {
       shoudUpdateState(false, name, "change") &&
         setErrors((prev) => ({
@@ -78,20 +96,23 @@ const useTForm = (params: TFormParamsType) => {
           [name]: { ...prev[name], state: true },
         }));
 
-      store.store[name].setInputError(true);
+      realStore[name].setInputError(true);
     }
   };
 
-  const getValue = (name: string) => {
-    return store.store[name].getValue();
+  const getValue = (name: FieldKey) => {
+    return realStore[name].getValue();
   };
 
   const onBlur = (
     e: React.FocusEvent<HTMLInputElement>,
-    name: string,
+    name: FieldKey,
     options: ValidateOptionsType
   ) => {
-    Input.setValue(store.store[name], e.target.value);
+    Input.setValue(realStore[name], e.target.value);
+    store.validateAllInputDirty();
+    store.validateAllInputValid();
+    store.setTouchedState();
 
     if (validate(options, e.target.value)) {
       shoudUpdateState(true, name, "blur") &&
@@ -100,7 +121,7 @@ const useTForm = (params: TFormParamsType) => {
           [name]: { ...prev[name], state: false },
         }));
 
-      store.store[name].setInputError(false);
+      realStore[name].setInputError(false);
     } else {
       shoudUpdateState(false, name, "blur") &&
         setErrors((prev) => ({
@@ -108,12 +129,12 @@ const useTForm = (params: TFormParamsType) => {
           [name]: { ...prev[name], state: true },
         }));
 
-      store.store[name].setInputError(true);
+      realStore[name].setInputError(true);
     }
   };
 
-  const register = (name: string, options?: RegisterOptionType) => {
-    const combinedOnChnage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const register = (name: FieldKey, options?: RegisterOptionType) => {
+    const combinedOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       onChange(e, name, {
         rules: options?.rules,
         required: options?.required,
@@ -137,22 +158,59 @@ const useTForm = (params: TFormParamsType) => {
 
     return {
       onBlur: combinedOnBlur,
-      onChange: combinedOnChnage,
+      onChange: combinedOnChange,
       ref: ref,
       name: name,
-      placeholder: store.store[name].getPlaceholder(),
+      placeholder: realStore[name].getPlaceholder(),
     };
   };
 
-  const setError = (name: string, errorMessage: string[]) => {
-    store.store[name].setInputError(
-      store.store[name].getError().state,
+  const setError = (name: FieldKey, errorMessage: string[]) => {
+    realStore[name].setInputError(
+      realStore[name].getError().state,
       errorMessage
     );
   };
 
-  const error = (name: string) => {
-    return store.store[name].getError();
+  const error = (name: FieldKey) => {
+    return realStore[name].getError();
+  };
+
+  type ValidDataType = {
+    [k: string]: Record<keyof Form, Input>[keyof Form][keyof Record<
+      keyof Form,
+      Input
+    >[keyof Form]];
+  };
+  type InValidDataType = {
+    [k: string]: Record<keyof Form, Input>[keyof Form][keyof Record<
+      keyof Form,
+      Input
+    >[keyof Form]];
+  };
+
+  const handleSubmit =
+    (
+      onValid: (data: ValidDataType) => void,
+      onInValid?: (data: InValidDataType) => void
+    ) =>
+    (e: React.FormEvent<HTMLFormElement>) => {
+      const isFormValid = store.getValidState();
+
+      const validData = extractObjectWithEntries(realStore, "value");
+      const submit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        isFormValid ? onValid(validData) : onInValid?.(validData);
+      };
+
+      submit(e);
+    };
+
+  const formState = {
+    isValid: store.getValidState(),
+    isDirty: store.getDirtyState(),
+    isTouched: store.getTouchedState(),
   };
 
   return {
@@ -161,6 +219,8 @@ const useTForm = (params: TFormParamsType) => {
     setError,
     error,
     errors,
+    handleSubmit,
+    formState,
   };
 };
 
