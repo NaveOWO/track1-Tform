@@ -1,1 +1,1 @@
-export { default as useTForm } from "../hooks/form/useTForm";
+export { useTForm } from "../hooks/form/useTForm";

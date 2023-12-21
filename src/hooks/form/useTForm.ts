@@ -212,4 +212,4 @@ const useTForm = <Form extends TFormParamsType>(params: Form) => {
   };
 };
 
-export default { useTForm };
+export { useTForm };
