@@ -1,15 +1,19 @@
 {
   "name": "track1-form",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
+  "main": "dist/lib/index.js",
+  "types": "dist/index.d.ts",
+  "browser": "./browser/specific/main.js",
+  "exports": "./src/lib",
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.68",
-    "@types/react": "^18.2.43",
-    "@types/react-dom": "^18.2.17",
+    "@types/node": "^16.18.59",
+    "@types/react": "^18.2.29",
+    "@types/react-dom": "^18.2.14",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
@@ -20,7 +24,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "prepare": "rm -rf dist && mkdir dist && tsc"
   },
   "eslintConfig": {
     "extends": [
@@ -39,5 +44,21 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "description": "This library was created for the forms in the Track1 project.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NaveOWO/track1-Tform.git"
+  },
+  "author": "CK",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NaveOWO/track1-Tform/issues"
+  },
+  "keywords": [
+    "form",
+    "track1-form"
+  ],
+  "homepage": "https://github.com/NaveOWO/track1-Tform#readme",
+  "devDependencies": {}
 }
