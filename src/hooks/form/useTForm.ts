@@ -4,14 +4,6 @@ import { extractObjectWithEntries } from "../../utils/common/extractedObject";
 import { ErrorType, Input } from "../../utils/input/input";
 import { Store } from "../../utils/store/store";
 
-export type ParamsValueType = {
-  defaultValue?: string | string[];
-  placeholder?: string;
-  type?: "file" | "text" | "checkbox";
-  onChangeMode?: boolean;
-  onBlurMode?: boolean;
-};
-
 type ValidateOptionsType = {
   rules?: RegExp[];
   required?: boolean;
@@ -220,4 +212,4 @@ const useTForm = <Form extends TFormParamsType>(params: Form) => {
   };
 };
 
-export { useTForm };
+export default { useTForm };
